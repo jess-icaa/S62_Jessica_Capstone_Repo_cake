@@ -195,7 +195,7 @@ function CakeDetail({ cake, onBack, onAddToCart }) {
   );
 
 }
-function UserProfile({ onBack }) {
+function UserProfile({ onBack, onDeleteAccount }) {
   return (
     <div className="user-profile">
       <button className="back-button" onClick={onBack}>← Back</button>
@@ -206,6 +206,20 @@ function UserProfile({ onBack }) {
         <p><strong>Email:</strong> jesmercakes@gmail.com</p>
         <p><strong>Orders:</strong> 3 previous cakes</p>
       </div>
+      <button
+  onClick={onDeleteAccount}
+  style={{
+    marginTop: "20px",
+    backgroundColor: "#ff4d4d",
+    color: "white",
+    padding: "10px",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer"
+  }}
+>
+  Delete Account
+</button>
     </div>
   );
 }
@@ -434,6 +448,37 @@ const handleAddToCart = (cake) => {
 
   };
 
+  const handleDeleteAccount = async () => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete your account?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const token = localStorage.getItem("token");
+
+    await axios.delete(`${API}/api/auth/delete`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // logout + reset state
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    setIsAdmin(false);
+    setShowDashboard(false);
+    setShowProfile(false);
+
+    alert("Account deleted successfully");
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to delete account");
+  }
+};
+
   useEffect(() => {
 
     const fetchCakes = async () => {
@@ -533,7 +578,10 @@ const handleAddToCart = (cake) => {
       ) : showDashboard && isAdmin ? (
         <AdminDashboard />
       ) : showProfile ? (
-        <UserProfile onBack={() => setShowProfile(false)} />
+        <UserProfile 
+        onBack={() => setShowProfile(false)}
+        onDeleteAccount={handleDeleteAccount}
+         />
       ) : showCart ? (
         <CartView
           cartItems={cartItems}
