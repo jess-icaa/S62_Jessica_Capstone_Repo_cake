@@ -3,18 +3,26 @@ import axios from "axios";
 
 function Login({ setIsAdmin, setShowDashboard, setIsLoggedIn, setShowLogin }) {
 
+  const [isSignup, setIsSignup] = useState(false);
+
+  const [name, setName] = useState(""); // only used for signup
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const API = import.meta.env.VITE_API_URL;
 
-  const handleLogin = async () => {
-
+  const handleSubmit = async () => {
     try {
 
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/login`,
-        { email, password }
-      );
+      const url = isSignup
+        ? `${API}/api/auth/register`
+        : `${API}/api/auth/login`;
+
+      const payload = isSignup
+        ? { name, email, password }
+        : { email, password };
+
+      const res = await axios.post(url, payload);
 
       /* save token */
       localStorage.setItem("token", res.data.token);
@@ -22,7 +30,7 @@ function Login({ setIsAdmin, setShowDashboard, setIsLoggedIn, setShowLogin }) {
       /* mark user as logged in */
       setIsLoggedIn(true);
 
-      /* close login page */
+      /* close login/signup page */
       setShowLogin(false);
 
       const role = res.data.role;
@@ -31,26 +39,31 @@ function Login({ setIsAdmin, setShowDashboard, setIsLoggedIn, setShowLogin }) {
       if (role === "admin") {
         setIsAdmin(true);
         setShowDashboard(true);
-      }
-
-      /* customer login */
-      else {
-        alert("Login successful");
+      } else {
+        alert(isSignup ? "Signup successful 🎉" : "Login successful");
       }
 
     } catch (err) {
-
-      alert("Login failed");
-
+      alert(err.response?.data?.message || "Something went wrong");
     }
-
   };
 
   return (
 
     <div className="login-container">
 
-      <h2>Login</h2>
+      <h2>{isSignup ? "Sign Up" : "Login"}</h2>
+
+      {isSignup && (
+        <>
+          <input
+            placeholder="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <br /><br />
+        </>
+      )}
 
       <input
         placeholder="email"
@@ -69,9 +82,18 @@ function Login({ setIsAdmin, setShowDashboard, setIsLoggedIn, setShowLogin }) {
 
       <br /><br />
 
-      <button onClick={handleLogin}>
-        Login
+      <button onClick={handleSubmit}>
+        {isSignup ? "Create Account" : "Login"}
       </button>
+
+      <p
+        style={{ cursor: "pointer", marginTop: "10px" }}
+        onClick={() => setIsSignup(!isSignup)}
+      >
+        {isSignup
+          ? "Already have an account? Login"
+          : "Don't have an account? Sign up"}
+      </p>
 
     </div>
 
